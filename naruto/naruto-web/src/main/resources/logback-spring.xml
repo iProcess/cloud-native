@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 日志级别从低到高分为TRACE < DEBUG < INFO < WARN < ERROR < FATAL，如果设置为WARN，则低于WARN的信息都不会输出 -->
+<!-- scan:当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true -->
+<!-- scanPeriod:设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。当scan为true时，此属性生效。默认的时间间隔为1分钟。 -->
+<!-- debug:当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。 -->
+<!--<configuration scan="true" scanPeriod="10 seconds" debug="true">-->
+<!--<configuration scan="true" scanPeriod="10 seconds">-->
+<configuration>
+    <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
+    <springProperty scope="context" name="LOG_HOME" source="logback-log.path"/>
+    <springProperty scope="context" name="LOG_PATTERN" source="logback-log.pattern"/>
+    <springProperty scope="context" name="LOG_LEVEL" source="logback-log.level"/>
+    <springProperty scope="context" name="LOG_MAXHISTORY" source="logback-log.maxHistory"/>
+    <springProperty scope="context" name="LOG_TOTALSIZECAP" source="logback-log.totalSizeCap"/>
+
+    <!--控制台输出 begin-->
+    <!--输出到控制台-->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <!--格式化输出 -->
+                <pattern>${LOG_PATTERN}</pattern>
+            </layout>
+            <!-- 日志输出编码 -->
+            <charset>UTF-8</charset>
+        </encoder>
+        <!--
+        onMatch和onMismatch都有三个属性值，分别为Accept、DENY和NEUTRAL
+        onMatch="ACCEPT" 表示匹配该级别及以上
+        onMatch="DENY" 表示不匹配该级别及以上
+        onMatch="NEUTRAL" 表示该级别及以上的，由下一个filter处理，如果当前是最后一个，则表示匹配该级别及以上
+        onMismatch="ACCEPT" 表示匹配该级别以下
+        onMismatch="NEUTRAL" 表示该级别及以下的，由下一个filter处理，如果当前是最后一个，则不匹配该级别以下的
+        onMismatch="DENY" 表示不匹配该级别以下的
+        如：
+        此日志文件只记录ERROR级别的
+         -->
+        <!--<filter class="ch.qos.logback.classic.filter.LevelFilter">-->
+            <!--<level>ERROR</level>-->
+            <!--<onMatch>ACCEPT</onMatch>-->
+            <!--<onMismatch>DENY</onMismatch>-->
+        <!--</filter>-->
+    </appender>
+    <!--控制台输出 end-->
+
+    <!--
+    root节点是必选节点，用来指定最基础的日志输出级别，只有一个level属性
+    level:用来设置打印级别，大小写无关：TRACE, DEBUG, INFO, WARN, ERROR, ALL 和 OFF， 默认是DEBUG
+    可以包含零个或多个元素，标识这个appender将会添加到这个logger。
+    打印日志时，除了打印appender-ref自身定义的日志级别，还会将root定义的日志级别进行打印，故不推荐在root中配置多个appender-ref
+    -->
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="CONSOLE"/>
+        <!--<appender-ref ref="indexControllerAppender"/>-->
+    </root>
+
+    <!--IndexController日志 begin-->
+    <!-- 时间滚动输出日志 -->
+    <appender name="indexControllerAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 正在记录的日志文件的路径及文件名 -->
+        <!--<file>${logback-log.path}/indexController.log</file>-->
+        <file>${LOG_HOME}/indexController.log</file>
+        <!-- 日志记录器的滚动策略，按时间和文件大小归档 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 归档文件名格式 按秒级归档-->
+            <!--<fileNamePattern>D:/logs/naruto/indexController.log.%d{yyyy-MM-dd.HHmmss}.%i</fileNamePattern>-->
+            <!-- 归档文件名格式 按分钟归档-->
+            <!--<fileNamePattern>D:/logs/naruto/indexController.log.%d{yyyy-MM-dd.HHmm}.%i</fileNamePattern>-->
+            <!-- 归档文件名格式 按小时归档-->
+            <!--<fileNamePattern>D:/logs/naruto/indexController.log.%d{yyyy-MM-dd.HH}.%i</fileNamePattern>-->
+            <!-- 归档文件名格式 按天归档-->
+            <fileNamePattern>${LOG_HOME}/indexController.log.%d{yyyy-MM-dd}.%i</fileNamePattern>
+            <!--
+            保留N个周期内的归档文件，每个周期内会有多个文件，每个文件的大小等于maxFileSize，
+            如：阈值是3，每分钟归档1次，会保留前3分钟内的归档文件，每分钟内会有多个归档文件
+            -->
+            <maxHistory>${LOG_MAXHISTORY}</maxHistory>
+            <!-- 单个日志大小，大于该阈值，文件会被拆分成新的备份 -->
+            <maxFileSize>${LOG_TOTALSIZECAP}</maxFileSize>
+        </rollingPolicy>
+
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <!--格式化输出 -->
+                <pattern>${LOG_PATTERN}</pattern>
+            </layout>
+            <!-- 日志输出编码 -->
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+    <!--
+    <logger>用来设置某一个包或者具体的某一个类的日志打印级别、
+    以及指定<appender>。<logger>仅有一个name属性，
+    一个可选的level和一个可选的addtivity属性。
+    name:用来指定受此logger约束的某一个包或者具体的某一个类。
+    level:用来设置打印级别，大小写无关：TRACE, DEBUG, INFO, WARN, ERROR, ALL 和 OFF，
+          还有一个特俗值INHERITED或者同义词NULL，代表强制执行上级的级别。
+          如果未设置此属性，那么当前logger将会继承上级的级别。
+    addtivity:是否向上级logger传递打印信息。默认是true。
+    -->
+    <logger name="indexControllerLog" additivity="false"  level="${LOG_LEVEL}">
+        <appender-ref ref="indexControllerAppender"/>
+    </logger>
+    <!--IndexController日志 end-->
+
+</configuration>
